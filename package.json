@@ -1,0 +1,23 @@
+{
+  "name": "tinyapp",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Hands-on-robotics/tinyapp.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Hands-on-robotics/tinyapp/issues"
+  },
+  "homepage": "https://github.com/Hands-on-robotics/tinyapp#readme",
+  "dependencies": {
+    "npm": "^10.1.0"
+  }
+}
