@@ -29,6 +29,11 @@ app.get('/hello', (req, res) => {
 });
 
 app.get('/urls', (req, res) => {
-  const templateVars = { urls: urlDatabase };
+  const templateVars = { urls: urlDatabase }; // So did we create an object around urlDatabase with the key urls?
   res.render("urls_index", templateVars);
+});
+
+app.get("/urls/:id", (req, res) => {
+  const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id] }; // <--- How do I access the longURL? Is this the correct understanding? How was id: assigned to the short url? Was that done here?
+  res.render("urls_show", templateVars);
 });
