@@ -1,7 +1,6 @@
 
 // express_server.js
 
-
 // Setup //
 
 const express = require('express');
@@ -20,8 +19,7 @@ const urlDatabase = {
   "fsm5xK": "http://www.google.com"
 };
 
-
-// Functions //
+// Function //
 
 // Generates the tiny urls
 const generateRandomString = function() {
@@ -36,32 +34,37 @@ const generateRandomString = function() {
   return randomString;
 };
 
-
 // Routing //
 
 // G E T  R O U T E S
 
-// Home Page
+// Create Home Page
+// // (Login option, click on link, <a href="/login"> tag)
+// app.get('/');
+
+// Main Page
 app.get('/urls', (req, res) => {
-  
-  console.log("Cookies", req.cookies); // undefined
-  
   const templateVars = {
-    username: req.cookies["Labby"],
+    username: req.cookies["username"],
     urls: urlDatabase
   };
+
   res.render("urls_index", templateVars);
 });
 
 // New TinyUrl Page
 app.get('/urls/new', (req, res) => {
-  res.render("urls_new");
+  const templateVars = {
+    username: req.cookies["username"]
+  };
+
+  res.render("urls_new", templateVars);
 });
 
 // Individual Url Page
 app.get("/urls/:id", (req, res) => {
   const shortUrl = req.params.id;
-  const templateVars = { id: shortUrl, longURL: urlDatabase[shortUrl] };
+  const templateVars = { id: shortUrl, longURL: urlDatabase[shortUrl], username: req.cookies["username"]};
   res.render("urls_show", templateVars);
 });
 
@@ -74,14 +77,19 @@ app.get("/u/:id", (req, res) => {
   res.redirect(longURL);
 });
 
-
 // P O S T   R O U T E S
 
 // Login
 app.post('/login', (req, res) => {
   const username = req.body.username;
 
-  res.cookie(username, username);
+  res.cookie("username", username);
+  res.redirect('/urls');
+});
+
+// Logout
+app.post('/logout', (req, res) => {
+  res.clearCookie("username");
   res.redirect('/urls');
 });
 
@@ -89,11 +97,6 @@ app.post('/login', (req, res) => {
 app.post('/urls', (req, res) => {
   const shortUrl = generateRandomString();
   urlDatabase[shortUrl] = req.body.longURL;
-
-  console.log("req.params.id", req.params.id);
-  console.log("shortUrl", shortUrl);
-  console.log("req.body.longURL", req.body.longURL);
-  console.log("urlDatabase[shortUrl]", urlDatabase[shortUrl]);
 
   res.redirect(`/urls/${shortUrl}`);
 });
@@ -103,24 +106,17 @@ app.post('/urls/:id', (req, res) => {
   const shortUrl = req.params.id;
   urlDatabase[shortUrl] = req.body.longURL;
 
-  console.log("shortUrl", shortUrl);
-  console.log("urlDatabase[shortUrl]", urlDatabase[shortUrl]);
-
-  // sends back to same page
   res.redirect(`/urls`);
 });
 
-// Deletes tiny url from database from index page
+// Deletes tiny url from database on index page
 app.post("/urls/:id/delete", (req, res) => {
   delete urlDatabase[req.params.id];
+
   res.redirect('/urls');
 });
 
-
-
-
 // SERVER //
-
 
 // Server on (always at bottom)
 app.listen(PORT, () => {
