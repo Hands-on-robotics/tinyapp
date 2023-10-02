@@ -1,11 +1,23 @@
 
 // express_server.js
 
+
+// Setup //
+
 const express = require('express');
-// Do we need const bodyParser = require('body-parser'); in this project? // written down
 const app = express();
 const PORT = 8080;
 
+app.set("view engine", "ejs");
+app.use(express.urlencoded({ extended: true }));
+
+// Database
+const urlDatabase = {
+  "b2xVn2": "http://www.lighthouselabs.ca",
+  "fsm5xK": "http://www.google.com"
+};
+
+// Function creates the tiny urls
 const generateRandomString = function() {
   const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
   let randomString = '';
@@ -18,25 +30,9 @@ const generateRandomString = function() {
   return randomString;
 };
 
-// Viewing engine
-app.set("view engine", "ejs");
-app.use(express.urlencoded({ extended: true }));
+// Routing //
 
-// Database
-const urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "fsm5xK": "http://www.google.com"
-};
-
-// Do We Need This At All? // written down
-// app.get('/', (req, res) => {
-//   res.send("Hello!");
-// });
-
-// Shows database without CSS
-// app.get('/urls.json', (req, res) => {
-//   res.json(urlDatabase);
-// });
+// GET Routes
 
 // Home Page
 app.get('/urls', (req, res) => {
@@ -44,20 +40,19 @@ app.get('/urls', (req, res) => {
   res.render("urls_index", templateVars);
 });
 
-
+// Shows create a new tiny url page
 app.get('/urls/new', (req, res) => {
   res.render("urls_new");
 });
 
-// shows Individual URL
+// Shows Individual URL page
 app.get("/urls/:id", (req, res) => {
   const shortUrl = req.params.id;
   const templateVars = { id: shortUrl, longURL: urlDatabase[shortUrl] };
   res.render("urls_show", templateVars);
 });
 
-
-// Redirects to longURL
+// Redirects to longURL page
 app.get("/u/:id", (req, res) => {
   // long URL at short URL's address
   const longURL = urlDatabase[req.params.id];
@@ -66,37 +61,48 @@ app.get("/u/:id", (req, res) => {
   res.redirect(longURL);
 });
 
-// Delete request for home page
+
+// P O S T   R O U T E S
+
+
+// Creates a tiny url
+app.post('/urls', (req, res) => {
+  const shortUrl = generateRandomString();
+  urlDatabase[shortUrl] = req.body.longURL;
+
+  console.log("req.params.id", req.params.id);
+  console.log("shortUrl", shortUrl);
+  console.log("req.body.longURL", req.body.longURL);
+  console.log("urlDatabase[shortUrl]", urlDatabase[shortUrl]);
+
+  res.redirect(`/urls/${shortUrl}`);
+});
+
+// Edits a tiny urls long url
+app.post('/urls/:id', (req, res) => {
+  const shortUrl = req.params.id;
+  urlDatabase[shortUrl] = req.body.longURL;
+
+  console.log("shortUrl", shortUrl);
+  console.log("urlDatabase[shortUrl]", urlDatabase[shortUrl]);
+
+  // sends back to same page
+  res.redirect(`/urls`);
+});
+
+// Deletes tiny url from database from index page
 app.post("/urls/:id/delete", (req, res) => {
   delete urlDatabase[req.params.id];
   res.redirect('/urls');
 });
 
-// P O S T  R O U T E
 
 
-// (Cannot POST /urls/new) Creates a tiny url
-app.post('/urls', (req, res) => {
-  const shortUrl = generateRandomString();
 
-  urlDatabase[shortUrl] = req.body.longURL;
-  res.redirect(`/urls/${shortUrl}`);
-});
+// SERVER //
 
 
-// (Unfinished) Edit feature for individual url
-// app.post('urls/:id', (req, res) => {
-//   const shortUrl = req.params.id;
-
-//   urlDatabase[shortUrl] = req.body.longURL; //"submitted Long URL"
-
-
-//   // redirects to updated page
-//   // const templateVars = { id: shortUrl, longURL: urlDatabase[shortUrl] };
-//   res.redirect(`/urls/${shortUrl}`);
-// });
-
-// Server on
+// Server on (always at bottom)
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}`);
 });
