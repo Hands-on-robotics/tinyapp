@@ -18,9 +18,12 @@
         <a class="nav-item nav-link" href="/urls/new">Create New URL</a>
       </div>
     </div>
-    <form method="post" action="/login">
-      <input type="text" style="width: 300px;" placeholder="Username" name="username">
-      <button type="submit">Login</button>
-    </form>
+    <div>
+      <p>Logged in as: <%= username %></p>
+      <form method="post" action="/login">
+        <input type="text" style="width: 300px;" placeholder="Username" name="username">
+        <button type="submit">Login</button>
+      </form>
+    </div>
   </nav>
 </header>

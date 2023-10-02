@@ -5,19 +5,25 @@
 // Setup //
 
 const express = require('express');
+const cookieParser = require('cookie-parser');
 const app = express();
 const PORT = 8080;
 
 app.set("view engine", "ejs");
+app.use(cookieParser());
 app.use(express.urlencoded({ extended: true }));
 
-// Database
+// Database //
+
 const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
   "fsm5xK": "http://www.google.com"
 };
 
-// Function creates the tiny urls
+
+// Functions //
+
+// Generates the tiny urls
 const generateRandomString = function() {
   const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
   let randomString = '';
@@ -30,29 +36,36 @@ const generateRandomString = function() {
   return randomString;
 };
 
+
 // Routing //
 
-// GET Routes
+// G E T  R O U T E S
 
 // Home Page
 app.get('/urls', (req, res) => {
-  const templateVars = { urls: urlDatabase };
+  
+  console.log("Cookies", req.cookies); // undefined
+  
+  const templateVars = {
+    username: req.cookies["Labby"],
+    urls: urlDatabase
+  };
   res.render("urls_index", templateVars);
 });
 
-// Shows create a new tiny url page
+// New TinyUrl Page
 app.get('/urls/new', (req, res) => {
   res.render("urls_new");
 });
 
-// Shows Individual URL page
+// Individual Url Page
 app.get("/urls/:id", (req, res) => {
   const shortUrl = req.params.id;
   const templateVars = { id: shortUrl, longURL: urlDatabase[shortUrl] };
   res.render("urls_show", templateVars);
 });
 
-// Redirects to longURL page
+// Long Url's Page
 app.get("/u/:id", (req, res) => {
   // long URL at short URL's address
   const longURL = urlDatabase[req.params.id];
@@ -67,10 +80,8 @@ app.get("/u/:id", (req, res) => {
 // Login
 app.post('/login', (req, res) => {
   const username = req.body.username;
-  const value = generateRandomString();
-  console.log(req.body.username);
 
-  res.cookie(username, value);
+  res.cookie(username, username);
   res.redirect('/urls');
 });
 
