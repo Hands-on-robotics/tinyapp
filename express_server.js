@@ -64,6 +64,15 @@ app.get("/u/:id", (req, res) => {
 
 // P O S T   R O U T E S
 
+// Login
+app.post('/login', (req, res) => {
+  const username = req.body.username;
+  const value = generateRandomString();
+  console.log(req.body.username);
+
+  res.cookie(username, value);
+  res.redirect('/urls');
+});
 
 // Creates a tiny url
 app.post('/urls', (req, res) => {
