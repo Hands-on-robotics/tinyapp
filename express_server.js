@@ -14,7 +14,22 @@ app.use(express.urlencoded({ extended: true }));
 
 // Database //
 
+const users = {
+  // Examples
+  userRandomID: {
+    id: "userRandomID",
+    email: "user@example.com",
+    password: "purple-monkey-dinosaur",
+  },
+  user2RandomID: {
+    id: "user2RandomID",
+    email: "user2@example.com",
+    password: "dishwasher-funk",
+  },
+};
+
 const urlDatabase = {
+  // Examples
   "b2xVn2": "http://www.lighthouselabs.ca",
   "fsm5xK": "http://www.google.com"
 };
@@ -38,11 +53,20 @@ const generateRandomString = function() {
 
 // G E T  R O U T E S
 
-// Create Home Page
-// // (Login option, click on link, <a href="/login"> tag)
+// TODO
+// Create Home Page (Login option, click on link, <a href="/login"> tag)
 // app.get('/');
 
-// Main Page
+// Registration Page
+app.get('/register', (req, res) => {
+  const templateVars = {
+    username: req.cookies["username"]
+  };
+
+  res.render('register', templateVars);
+});
+
+// Main Urls Page
 app.get('/urls', (req, res) => {
   const templateVars = {
     username: req.cookies["username"],
@@ -52,7 +76,7 @@ app.get('/urls', (req, res) => {
   res.render("urls_index", templateVars);
 });
 
-// New TinyUrl Page
+// Create TinyUrl Page
 app.get('/urls/new', (req, res) => {
   const templateVars = {
     username: req.cookies["username"]
@@ -61,7 +85,7 @@ app.get('/urls/new', (req, res) => {
   res.render("urls_new", templateVars);
 });
 
-// Individual Url Page
+// View/Edit TinyUrl Page
 app.get("/urls/:id", (req, res) => {
   const shortUrl = req.params.id;
   const templateVars = { id: shortUrl, longURL: urlDatabase[shortUrl], username: req.cookies["username"]};
@@ -78,6 +102,22 @@ app.get("/u/:id", (req, res) => {
 });
 
 // P O S T   R O U T E S
+
+//Register
+app.post('/register', (req, res) => {
+  const userID = generateRandomString();
+  const id = userID;
+
+  const email = req.body.email;
+  const password = req.body.password;
+
+  console.log(users);
+  users[userID] = { id, email, password};
+  console.log(users);
+
+  res.cookie('user_id', id);
+  res.redirect('/urls');
+});
 
 // Login
 app.post('/login', (req, res) => {
