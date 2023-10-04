@@ -62,12 +62,21 @@ const generateSixRandomChars = function() {
 
 // G E T  R O U T E S
 
+// TODO // GET Routes need if statements to redirect
 app.get('/register', (req, res) => {
+  if (users[req.cookies.user_id]) {
+    res.redirect('urls');
+  }
+
   const templateVars = { user: users[req.cookies.user_id] };
   res.render('register', templateVars);
 });
 
 app.get('/login', (req, res) => {
+  if (users[req.cookies.user_id]) {
+    res.redirect('urls');
+  }
+  
   const templateVars = { user: users[req.cookies.user_id] };
   res.render('login', templateVars);
 });
