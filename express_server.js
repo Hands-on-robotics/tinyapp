@@ -69,16 +69,15 @@ app.get('/', (req, res) => {
 
 // Registration Page
 app.get('/register', (req, res) => {
-  const templateVars = {
-    user: users[req.cookies.user_id]
-  };
+  const templateVars = { user: users[req.cookies.user_id] };
 
   res.render('register', templateVars);
 });
 
 // Login Page
 app.get('/login', (req, res) => {
-  res.render('login');
+  const templateVars = { user: users[req.cookies.user_id] };
+  res.render('login', templateVars);
 });
 
 // Main Urls Page
@@ -93,9 +92,7 @@ app.get('/urls', (req, res) => {
 
 // Create TinyUrl Page
 app.get('/urls/new', (req, res) => {
-  const templateVars = {
-    user: users[req.cookies.user_id]
-  };
+  const templateVars = { user: users[req.cookies.user_id] };
 
   res.render("urls_new", templateVars);
 });
@@ -104,35 +101,32 @@ app.get('/urls/new', (req, res) => {
 app.get("/urls/:id", (req, res) => {
   const shortUrl = req.params.id;
   const templateVars = { id: shortUrl, longURL: urlDatabase[shortUrl], user: users[req.cookies.user_id]};
+
   res.render("urls_show", templateVars);
 });
 
 // Long Url's Page
 app.get("/u/:id", (req, res) => {
-  // long URL at short URL's address
   const longURL = urlDatabase[req.params.id];
-
-  // redirects to real url
   res.redirect(longURL);
 });
 
 // P O S T   R O U T E S
 
-//Register (automatically logs user in)
-// TODO Check for existing email
+// Register
 app.post('/register', (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
 
   // TODO // FEATURE // reload page with fill form messages
-  if (!email) {
+  if (findUserByEmail(email)) {
+    res.status(400).send("This email has already been registered. Please login or enter another email.");
+  } else if (!email) {
     res.status(400).send("Email was left empty. Please enter a valid email.");
     // res.redirect('/register');
   } else if (!password) {
     res.status(400).send("password was left empty. Please enter a valid password.");
     // res.redirect('/register');
-  } else if (findUserByEmail(email)) {
-    res.status(400).send("This email has already been registered. Please login or enter another email.");
   }
   const id = sixRandomChars();
   
@@ -141,26 +135,31 @@ app.post('/register', (req, res) => {
   res.redirect('/urls');
 });
 
-
-// TODO // Fix: Cannot login user in, because registration automatically does and logging out clears the cookie to log back in with.
-// Login
 app.post('/login', (req, res) => {
   const email = req.body.email;
+  const submittedPassword = req.body.password;
+  const user = findUserByEmail(email);
 
-  if (findUserByEmail(email)) {
-    res.redirect('/urls'); // Do I need to pass user to /urls?
+  if (user) {
+    const userPassword = user.password; // <-- .password; undefined
+    if (userPassword === submittedPassword) {
+      const id = user.id;
+      res.cookie('user_id', id);
+      res.redirect('/urls');
+    } else {
+      res.status(403).send("<h1>Password Does Not Match</h1>");
+    }
   } else {
-    res.send("<h1>User Not Found</h1>");
+    res.status(403).send("<h1>User Not Found</h1>");
   }
 });
 
-// Logout
 app.post('/logout', (req, res) => {
   const email = req.body.email;
   console.log("user found by email", findUserByEmail(email));
   console.log("users database", users);
-  res.clearCookie("user_id"); // Once cleared, you can't log back in.
-  res.redirect('/urls');
+  res.clearCookie("user_id");
+  res.redirect('login');
 });
 
 // Creates a tiny url
