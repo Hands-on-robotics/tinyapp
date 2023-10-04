@@ -36,18 +36,17 @@ const urlDatabase = {
 
 // Functions //
 
-const findUserByEmail = function(email) {
+const foundUserByEmail = function(email) {
   for (const id in users) {
     const user = users[id];
     if (user.email === email) {
-      console.log("findUserByEmail function should return user: ", user);
       return user;
     }
   }
   return null;
 };
 
-const sixRandomChars = function() {
+const generateSixRandomChars = function() {
   const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
   let randomString = '';
 
@@ -63,41 +62,32 @@ const sixRandomChars = function() {
 
 // G E T  R O U T E S
 
-// TODO // Home Page (Does not crash or load a page)
-app.get('/', (req, res) => {
-});
-
-// Registration Page
 app.get('/register', (req, res) => {
   const templateVars = { user: users[req.cookies.user_id] };
-
   res.render('register', templateVars);
 });
 
-// Login Page
 app.get('/login', (req, res) => {
   const templateVars = { user: users[req.cookies.user_id] };
   res.render('login', templateVars);
 });
 
-// Main Urls Page
+// View All Tiny Urls
 app.get('/urls', (req, res) => {
   const templateVars = {
     user: users[req.cookies.user_id],
     urls: urlDatabase
   };
-
   res.render("urls_index", templateVars);
 });
 
-// Create TinyUrl Page
+// Create TinyUrl
 app.get('/urls/new', (req, res) => {
   const templateVars = { user: users[req.cookies.user_id] };
-
   res.render("urls_new", templateVars);
 });
 
-// View/Edit TinyUrl Page
+// View/Edit TinyUrl
 app.get("/urls/:id", (req, res) => {
   const shortUrl = req.params.id;
   const templateVars = { id: shortUrl, longURL: urlDatabase[shortUrl], user: users[req.cookies.user_id]};
@@ -105,7 +95,7 @@ app.get("/urls/:id", (req, res) => {
   res.render("urls_show", templateVars);
 });
 
-// Long Url's Page
+// Tiny Url's End Point
 app.get("/u/:id", (req, res) => {
   const longURL = urlDatabase[req.params.id];
   res.redirect(longURL);
@@ -113,38 +103,32 @@ app.get("/u/:id", (req, res) => {
 
 // P O S T   R O U T E S
 
-// Register
+// TODO // FEATURE // if either registration fields are submitted as empty, page reloads with a message to please fill in both fields.
 app.post('/register', (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
 
-  // TODO // FEATURE // reload page with fill form messages
-  if (findUserByEmail(email)) {
+  if (foundUserByEmail(email)) {
     res.status(400).send("This email has already been registered. Please login or enter another email.");
-  } else if (!email) {
-    res.status(400).send("Email was left empty. Please enter a valid email.");
-    // res.redirect('/register');
-  } else if (!password) {
-    res.status(400).send("password was left empty. Please enter a valid password.");
-    // res.redirect('/register');
+  } else if (!email || !password) {
+    res.status(400).send("Email and password are both required fields.");
   }
-  const id = sixRandomChars();
-  
+
+  const id = generateSixRandomChars();
   users[id] = { id, email, password};
+
   res.cookie('user_id', id);
   res.redirect('/urls');
 });
 
 app.post('/login', (req, res) => {
   const email = req.body.email;
-  const submittedPassword = req.body.password;
-  const user = findUserByEmail(email);
+  const loginPassword = req.body.password;
+  const user = foundUserByEmail(email);
 
   if (user) {
-    const userPassword = user.password; // <-- .password; undefined
-    if (userPassword === submittedPassword) {
-      const id = user.id;
-      res.cookie('user_id', id);
+    if (user.password === loginPassword) {
+      res.cookie('user_id', user.id);
       res.redirect('/urls');
     } else {
       res.status(403).send("<h1>Password Does Not Match</h1>");
@@ -155,22 +139,19 @@ app.post('/login', (req, res) => {
 });
 
 app.post('/logout', (req, res) => {
-  const email = req.body.email;
-  console.log("user found by email", findUserByEmail(email));
-  console.log("users database", users);
   res.clearCookie("user_id");
   res.redirect('login');
 });
 
-// Creates a tiny url
+// Post Tiny Url
 app.post('/urls', (req, res) => {
-  const shortUrl = sixRandomChars();
+  const shortUrl = generateSixRandomChars();
   urlDatabase[shortUrl] = req.body.longURL;
 
   res.redirect(`/urls/${shortUrl}`);
 });
 
-// Edits a tiny urls long url
+// Edits Original Url
 app.post('/urls/:id', (req, res) => {
   const shortUrl = req.params.id;
   urlDatabase[shortUrl] = req.body.longURL;
@@ -178,16 +159,14 @@ app.post('/urls/:id', (req, res) => {
   res.redirect(`/urls`);
 });
 
-// Deletes tiny url from database on index page
+// Delete Tiny Url
 app.post("/urls/:id/delete", (req, res) => {
   delete urlDatabase[req.params.id];
-
   res.redirect('/urls');
 });
 
 // SERVER //
 
-// Server on (always at bottom)
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}`);
 });
