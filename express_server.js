@@ -34,14 +34,24 @@ const urlDatabase = {
   "fsm5xK": "http://www.google.com"
 };
 
-// Function //
+// Functions //
 
-// Generates the tiny urls
-const generateRandomString = function() {
+const findUserByEmail = function(email) {
+  for (const id in users) {
+    const user = users[id];
+    if (user.email === email) {
+      console.log("findUserByEmail function should return user: ", user);
+      return user;
+    }
+  }
+  return null;
+};
+
+const sixRandomChars = function() {
   const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
   let randomString = '';
 
-  for (let i = 0; i < 7; i++) {
+  for (let i = 0; i < 6; i++) {
     const randomIndex = chars.charAt(Math.floor(Math.random() * chars.length));
     randomString += randomIndex;
   }
@@ -53,23 +63,28 @@ const generateRandomString = function() {
 
 // G E T  R O U T E S
 
-// TODO
-// Create Home Page (Login option, click on link, <a href="/login"> tag)
-// app.get('/');
+// TODO // Home Page (Does not crash or load a page)
+app.get('/', (req, res) => {
+});
 
 // Registration Page
 app.get('/register', (req, res) => {
   const templateVars = {
-    username: req.cookies["username"]
+    user: users[req.cookies.user_id]
   };
 
   res.render('register', templateVars);
 });
 
+// Login Page
+app.get('/login', (req, res) => {
+  res.render('login');
+});
+
 // Main Urls Page
 app.get('/urls', (req, res) => {
   const templateVars = {
-    username: req.cookies["username"],
+    user: users[req.cookies.user_id],
     urls: urlDatabase
   };
 
@@ -79,7 +94,7 @@ app.get('/urls', (req, res) => {
 // Create TinyUrl Page
 app.get('/urls/new', (req, res) => {
   const templateVars = {
-    username: req.cookies["username"]
+    user: users[req.cookies.user_id]
   };
 
   res.render("urls_new", templateVars);
@@ -88,7 +103,7 @@ app.get('/urls/new', (req, res) => {
 // View/Edit TinyUrl Page
 app.get("/urls/:id", (req, res) => {
   const shortUrl = req.params.id;
-  const templateVars = { id: shortUrl, longURL: urlDatabase[shortUrl], username: req.cookies["username"]};
+  const templateVars = { id: shortUrl, longURL: urlDatabase[shortUrl], user: users[req.cookies.user_id]};
   res.render("urls_show", templateVars);
 });
 
@@ -103,39 +118,54 @@ app.get("/u/:id", (req, res) => {
 
 // P O S T   R O U T E S
 
-//Register
+//Register (automatically logs user in)
+// TODO Check for existing email
 app.post('/register', (req, res) => {
-  const userID = generateRandomString();
-  const id = userID;
-
   const email = req.body.email;
   const password = req.body.password;
 
-  console.log(users);
-  users[userID] = { id, email, password};
-  console.log(users);
-
+  // TODO // FEATURE // reload page with fill form messages
+  if (!email) {
+    res.status(400).send("Email was left empty. Please enter a valid email.");
+    // res.redirect('/register');
+  } else if (!password) {
+    res.status(400).send("password was left empty. Please enter a valid password.");
+    // res.redirect('/register');
+  } else if (findUserByEmail(email)) {
+    res.status(400).send("This email has already been registered. Please login or enter another email.");
+  }
+  const id = sixRandomChars();
+  
+  users[id] = { id, email, password};
   res.cookie('user_id', id);
   res.redirect('/urls');
 });
 
+
+// TODO // Fix: Cannot login user in, because registration automatically does and logging out clears the cookie to log back in with.
 // Login
 app.post('/login', (req, res) => {
-  const username = req.body.username;
+  const email = req.body.email;
 
-  res.cookie("username", username);
-  res.redirect('/urls');
+  if (findUserByEmail(email)) {
+    res.redirect('/urls'); // Do I need to pass user to /urls?
+  } else {
+    res.send("<h1>User Not Found</h1>");
+  }
 });
 
 // Logout
 app.post('/logout', (req, res) => {
-  res.clearCookie("username");
+  const email = req.body.email;
+  console.log("user found by email", findUserByEmail(email));
+  console.log("users database", users);
+  res.clearCookie("user_id"); // Once cleared, you can't log back in.
   res.redirect('/urls');
 });
 
 // Creates a tiny url
 app.post('/urls', (req, res) => {
-  const shortUrl = generateRandomString();
+  const shortUrl = sixRandomChars();
   urlDatabase[shortUrl] = req.body.longURL;
 
   res.redirect(`/urls/${shortUrl}`);
@@ -162,5 +192,3 @@ app.post("/urls/:id/delete", (req, res) => {
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}`);
 });
-
-
