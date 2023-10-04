@@ -76,7 +76,7 @@ app.get('/login', (req, res) => {
   if (users[req.cookies.user_id]) {
     res.redirect('urls');
   }
-  
+
   const templateVars = { user: users[req.cookies.user_id] };
   res.render('login', templateVars);
 });
@@ -92,6 +92,9 @@ app.get('/urls', (req, res) => {
 
 // Create TinyUrl
 app.get('/urls/new', (req, res) => {
+  if (!users[req.cookies.user_id]) {
+    res.redirect('/login');
+  }
   const templateVars = { user: users[req.cookies.user_id] };
   res.render("urls_new", templateVars);
 });
@@ -107,6 +110,10 @@ app.get("/urls/:id", (req, res) => {
 // Tiny Url's End Point
 app.get("/u/:id", (req, res) => {
   const longURL = urlDatabase[req.params.id];
+  if (!longURL) {
+    res.status(404).send("<h1>Url Not In Database</h1>");
+  }
+
   res.redirect(longURL);
 });
 
@@ -152,15 +159,19 @@ app.post('/logout', (req, res) => {
   res.redirect('login');
 });
 
-// Post Tiny Url
+// Create Tiny Url
 app.post('/urls', (req, res) => {
+  if (!users[req.cookies.user_id]) {
+    res.status(401).send("<h1>Please Login Or Register To Create Tiny Urls</h1>");
+  }
+
   const shortUrl = generateSixRandomChars();
   urlDatabase[shortUrl] = req.body.longURL;
 
   res.redirect(`/urls/${shortUrl}`);
 });
 
-// Edits Original Url
+// Edit Original Url
 app.post('/urls/:id', (req, res) => {
   const shortUrl = req.params.id;
   urlDatabase[shortUrl] = req.body.longURL;
