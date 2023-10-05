@@ -5,6 +5,7 @@
 
 const express = require('express');
 const cookieParser = require('cookie-parser');
+const bcrypt = require('bcryptjs');
 const app = express();
 const PORT = 8080;
 
@@ -144,6 +145,7 @@ app.get("/u/:id", (req, res) => {
 app.post('/register', (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
+  const hashedPassword = bcrypt.hashSync(password, 10);
 
   if (foundUserByEmail(email)) {
     res.status(400).send("This email has already been registered. Please login or enter another email.");
@@ -152,7 +154,9 @@ app.post('/register', (req, res) => {
   }
 
   const id = generateSixRandomChars();
-  users[id] = { id, email, password};
+  users[id] = { id, email, hashedPassword};
+
+  console.log(users[id].hashedPassword);
 
   res.cookie('user_id', id);
   res.redirect('/urls');
@@ -160,11 +164,11 @@ app.post('/register', (req, res) => {
 
 app.post('/login', (req, res) => {
   const email = req.body.email;
-  const loginPassword = req.body.password;
   const user = foundUserByEmail(email);
+  const loginPassword = req.body.password;
 
   if (user) {
-    if (user.password === loginPassword) {
+    if (bcrypt.compareSync(loginPassword, user.hashedPassword)) {
       res.cookie('user_id', user.id);
       res.redirect('/urls');
     } else {
