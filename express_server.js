@@ -15,23 +15,24 @@ app.use(express.urlencoded({ extended: true }));
 // Database //
 
 const users = {
-  // Examples
+  // Example
   userRandomID: {
-    id: "userRandomID",
-    email: "user@example.com",
-    password: "purple-monkey-dinosaur",
-  },
-  user2RandomID: {
-    id: "user2RandomID",
-    email: "user2@example.com",
-    password: "dishwasher-funk",
-  },
+    id: "guy",
+    email: "a@a.com",
+    password: "123",
+  }
 };
 
 const urlDatabase = {
   // Examples
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "fsm5xK": "http://www.google.com"
+  b6UTxQ: {
+    longURL: "https://www.tsn.ca",
+    userID: "guy",
+  },
+  i3BoGr: {
+    longURL: "https://www.google.ca",
+    userID: "guy",
+  },
 };
 
 // Functions //
@@ -44,6 +45,17 @@ const foundUserByEmail = function(email) {
     }
   }
   return null;
+};
+
+const urlsForUser = function(id) {
+  let urls = {};
+  for (const tinyUrl in urlDatabase) {
+    if (urlDatabase[tinyUrl].userID === id) {
+      urls[tinyUrl] = urlDatabase[tinyUrl];
+    }
+  }
+
+  return urls;
 };
 
 const generateSixRandomChars = function() {
@@ -83,10 +95,12 @@ app.get('/login', (req, res) => {
 
 // View All Tiny Urls
 app.get('/urls', (req, res) => {
+
   const templateVars = {
     user: users[req.cookies.user_id],
-    urls: urlDatabase
+    urls: urlsForUser(req.cookies.user_id)
   };
+
   res.render("urls_index", templateVars);
 });
 
@@ -102,14 +116,21 @@ app.get('/urls/new', (req, res) => {
 // View/Edit TinyUrl
 app.get("/urls/:id", (req, res) => {
   const shortUrl = req.params.id;
-  const templateVars = { id: shortUrl, longURL: urlDatabase[shortUrl], user: users[req.cookies.user_id]};
+  const usersID = req.cookies.user_id;
+  const urlUserID = urlDatabase[shortUrl].id;
+  console.log("Is the User ID in cookie: ", req.cookies.user_id, "Equal to the user ID in Database:", users[req.cookies.user_id], "?");
 
+  if (!users[req.cookies.user_id] || usersID === urlUserID) {
+    res.status(401).send("<h1>Only the creator of the Tiny Url can view the url when Logged In</h1>");
+  }
+
+  const templateVars = { id: shortUrl, longURL: urlDatabase[shortUrl].longURL, user: users[req.cookies.user_id]};
   res.render("urls_show", templateVars);
 });
 
 // Tiny Url's End Point
 app.get("/u/:id", (req, res) => {
-  const longURL = urlDatabase[req.params.id];
+  const longURL = urlDatabase[req.params.id].longURL;
   if (!longURL) {
     res.status(404).send("<h1>Url Not In Database</h1>");
   }
@@ -166,22 +187,39 @@ app.post('/urls', (req, res) => {
   }
 
   const shortUrl = generateSixRandomChars();
-  urlDatabase[shortUrl] = req.body.longURL;
+
+  urlDatabase[shortUrl] = {
+    longURL: req.body.longURL,
+    userID: req.cookies.user_id
+  };
+
+  console.log("tinyUrl created", urlDatabase[shortUrl]);
 
   res.redirect(`/urls/${shortUrl}`);
 });
 
 // Edit Original Url
 app.post('/urls/:id', (req, res) => {
+  const usersID = req.cookies.user_id;
   const shortUrl = req.params.id;
-  urlDatabase[shortUrl] = req.body.longURL;
+  const urlUserID = urlDatabase[shortUrl].id;
+  if (!users[req.cookies.user_id] || usersID === urlUserID) {
+    res.status(401).send("<h1>Only the creator of the Tiny Url can edit the url when Logged In</h1>");
+  }
+  urlDatabase[shortUrl].longURL = req.body.longURL;
 
   res.redirect(`/urls`);
 });
 
 // Delete Tiny Url
 app.post("/urls/:id/delete", (req, res) => {
-  delete urlDatabase[req.params.id];
+  const usersID = req.cookies.user_id;
+  const shortUrl = req.params.id;
+  const urlUserID = urlDatabase[shortUrl].id;
+  if (!users[req.cookies.user_id] || usersID === urlUserID) {
+    res.status(401).send("<h1>Only the creator of the Tiny Url can delete the url when Logged In</h1>");
+  }
+  delete urlDatabase[shortUrl];
   res.redirect('/urls');
 });
 

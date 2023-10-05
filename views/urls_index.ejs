@@ -20,6 +20,9 @@
     <header><%- include('partials/_header') %></header>
     <main style="margin: 1em;">
       <h3>My URLs</h3>
+      <% if (!user) { %>
+        <h1>Login or Register to view your urls</h1>
+      <% } else { %>
       <table class="table">
         <thead>
           <tr>
@@ -30,24 +33,25 @@
           </tr>
         </thead>
         <tbody>
-          <% for (let id in urls) { %>
-            <tr>
-              <td><%= id %></td>
-              <td><%= urls[id] %></td>
-              <td>
-                <form method="GET" action="/urls/<%= id %>">
-                  <button type="submit">Edit</button>
-                </form>
-              </td>
-              <td>
-                <form method="POST" action="/urls/<%= id %>/delete">
-                  <button type="submit">Delete</button>
-                </form>
-              </td>
-            </tr>
-          <% } %>
-        </tbody>
-      </table>
+            <% for (let tinyUrl in urls) { %>
+              <tr>
+                <td><%= tinyUrl %></td>
+                <td><%= urls[tinyUrl].longURL %></td>
+                <td>
+                  <form method="GET" action="/urls/<%= tinyUrl %>">
+                    <button type="submit">Edit</button>
+                  </form>
+                </td>
+                <td>
+                  <form method="POST" action="/urls/<%= tinyUrl %>/delete">
+                    <button type="submit">Delete</button>
+                  </form>
+                </td>
+              </tr>
+            <% } %>
+          </tbody>
+        </table>
+        <% } %>
     </main>
     <!-- Bootstrap JS -->
     <script
