@@ -1,16 +1,28 @@
 
 // express_server.js
 
+/*
+(Stretch) activate href for tiny urls on main page
+(Stretch) the date the short URL was created
+(Stretch) the number of times the short URL was visited
+(Stretch) the number number of unique visits for the short URL
+*/
+
 // Setup //
 
 const express = require('express');
-const cookieParser = require('cookie-parser');
+const methodOverride = require('method-override');
+const cookieSession = require('cookie-session');
 const bcrypt = require('bcryptjs');
 const app = express();
 const PORT = 8080;
+const { foundUserByEmail } = require('./helpers');
 
 app.set("view engine", "ejs");
-app.use(cookieParser());
+app.use(cookieSession({
+  name: 'session',
+  keys: ['asupersecretstring', 'theywontknowwhatthisis', 'didyouguessthis']
+}));
 app.use(express.urlencoded({ extended: true }));
 
 // Database //
@@ -37,16 +49,6 @@ const urlDatabase = {
 };
 
 // Functions //
-
-const foundUserByEmail = function(email) {
-  for (const id in users) {
-    const user = users[id];
-    if (user.email === email) {
-      return user;
-    }
-  }
-  return null;
-};
 
 const urlsForUser = function(id) {
   let urls = {};
@@ -77,20 +79,20 @@ const generateSixRandomChars = function() {
 
 // TODO // GET Routes need if statements to redirect
 app.get('/register', (req, res) => {
-  if (users[req.cookies.user_id]) {
+  if (users[req.session.user_id]) {
     res.redirect('urls');
   }
 
-  const templateVars = { user: users[req.cookies.user_id] };
+  const templateVars = { user: users[req.session.user_id] };
   res.render('register', templateVars);
 });
 
 app.get('/login', (req, res) => {
-  if (users[req.cookies.user_id]) {
+  if (users[req.session.user_id]) {
     res.redirect('urls');
   }
 
-  const templateVars = { user: users[req.cookies.user_id] };
+  const templateVars = { user: users[req.session.user_id] };
   res.render('login', templateVars);
 });
 
@@ -98,8 +100,8 @@ app.get('/login', (req, res) => {
 app.get('/urls', (req, res) => {
 
   const templateVars = {
-    user: users[req.cookies.user_id],
-    urls: urlsForUser(req.cookies.user_id)
+    user: users[req.session.user_id],
+    urls: urlsForUser(req.session.user_id)
   };
 
   res.render("urls_index", templateVars);
@@ -107,25 +109,24 @@ app.get('/urls', (req, res) => {
 
 // Create TinyUrl
 app.get('/urls/new', (req, res) => {
-  if (!users[req.cookies.user_id]) {
+  if (!users[req.session.user_id]) {
     res.redirect('/login');
   }
-  const templateVars = { user: users[req.cookies.user_id] };
+  const templateVars = { user: users[req.session.user_id] };
   res.render("urls_new", templateVars);
 });
 
 // View/Edit TinyUrl
 app.get("/urls/:id", (req, res) => {
   const shortUrl = req.params.id;
-  const usersID = req.cookies.user_id;
+  const usersID = req.session.user_id;
   const urlUserID = urlDatabase[shortUrl].id;
-  console.log("Is the User ID in cookie: ", req.cookies.user_id, "Equal to the user ID in Database:", users[req.cookies.user_id], "?");
 
-  if (!users[req.cookies.user_id] || usersID === urlUserID) {
+  if (!users[req.session.user_id] || usersID === urlUserID) {
     res.status(401).send("<h1>Only the creator of the Tiny Url can view the url when Logged In</h1>");
   }
 
-  const templateVars = { id: shortUrl, longURL: urlDatabase[shortUrl].longURL, user: users[req.cookies.user_id]};
+  const templateVars = { id: shortUrl, longURL: urlDatabase[shortUrl].longURL, user: users[req.session.user_id]};
   res.render("urls_show", templateVars);
 });
 
@@ -158,7 +159,7 @@ app.post('/register', (req, res) => {
 
   console.log(users[id].hashedPassword);
 
-  res.cookie('user_id', id);
+  req.session.user_id = id;
   res.redirect('/urls');
 });
 
@@ -169,7 +170,7 @@ app.post('/login', (req, res) => {
 
   if (user) {
     if (bcrypt.compareSync(loginPassword, user.hashedPassword)) {
-      res.cookie('user_id', user.id);
+      req.session.user_id = user.id;
       res.redirect('/urls');
     } else {
       res.status(403).send("<h1>Password Does Not Match</h1>");
@@ -180,13 +181,13 @@ app.post('/login', (req, res) => {
 });
 
 app.post('/logout', (req, res) => {
-  res.clearCookie("user_id");
+  req.session = null;
   res.redirect('login');
 });
 
 // Create Tiny Url
 app.post('/urls', (req, res) => {
-  if (!users[req.cookies.user_id]) {
+  if (!users[req.session.user_id]) {
     res.status(401).send("<h1>Please Login Or Register To Create Tiny Urls</h1>");
   }
 
@@ -194,7 +195,7 @@ app.post('/urls', (req, res) => {
 
   urlDatabase[shortUrl] = {
     longURL: req.body.longURL,
-    userID: req.cookies.user_id
+    userID: req.session.user_id
   };
 
   console.log("tinyUrl created", urlDatabase[shortUrl]);
@@ -204,10 +205,10 @@ app.post('/urls', (req, res) => {
 
 // Edit Original Url
 app.post('/urls/:id', (req, res) => {
-  const usersID = req.cookies.user_id;
+  const usersID = req.session.user_id;
   const shortUrl = req.params.id;
   const urlUserID = urlDatabase[shortUrl].id;
-  if (!users[req.cookies.user_id] || usersID === urlUserID) {
+  if (!users[req.session.user_id] || usersID === urlUserID) {
     res.status(401).send("<h1>Only the creator of the Tiny Url can edit the url when Logged In</h1>");
   }
   urlDatabase[shortUrl].longURL = req.body.longURL;
@@ -217,10 +218,10 @@ app.post('/urls/:id', (req, res) => {
 
 // Delete Tiny Url
 app.post("/urls/:id/delete", (req, res) => {
-  const usersID = req.cookies.user_id;
+  const usersID = req.session.user_id;
   const shortUrl = req.params.id;
   const urlUserID = urlDatabase[shortUrl].id;
-  if (!users[req.cookies.user_id] || usersID === urlUserID) {
+  if (!users[req.session.user_id] || usersID === urlUserID) {
     res.status(401).send("<h1>Only the creator of the Tiny Url can delete the url when Logged In</h1>");
   }
   delete urlDatabase[shortUrl];
