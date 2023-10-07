@@ -30,7 +30,7 @@ const urlDatabase = {
   i3BoGr: {
     longURL: "https://www.google.ca",
     userID: "a1b2c3"
-  },
+  }
 };
 
 // Function //
