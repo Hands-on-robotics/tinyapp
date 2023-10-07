@@ -9,7 +9,7 @@ const generateSixRandomChars = function() {
     const randomIndex = chars.charAt(Math.floor(Math.random() * chars.length));
     randomString += randomIndex;
   }
-  
+
   return randomString;
 };
 
@@ -35,10 +35,4 @@ const urlsForUser = function(id, urlDatabase) {
   return urls;
 };
 
-const checkUsersPermissions = function(action, usersID, users, shortUrl, urlDatabase, res) {
-  if (!(users[usersID] && usersID === urlDatabase[shortUrl].userID)) {
-    res.status(401).send(`<h1>Only the creator of the Tiny Url can ${action} the url when Logged In</h1>`);
-  }
-};
-
-module.exports = { generateSixRandomChars, findUserByEmail, urlsForUser, checkUsersPermissions };
+module.exports = { generateSixRandomChars, findUserByEmail, urlsForUser };

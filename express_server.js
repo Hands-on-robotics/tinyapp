@@ -1,13 +1,10 @@
-
-// Setup //
-
 const express = require('express');
 const methodOverride = require('method-override');
 const cookieSession = require('cookie-session');
 const bcrypt = require('bcryptjs');
 const app = express();
 const PORT = 8080;
-const { generateSixRandomChars, findUserByEmail, urlsForUser, checkUsersPermissions } = require('./helpers');
+const { generateSixRandomChars, findUserByEmail, urlsForUser } = require('./helpers');
 
 app.set("view engine", "ejs");
 app.use(methodOverride('_method'));
@@ -38,6 +35,14 @@ const urlDatabase = {
       timeStamp: ""
     },
   },
+};
+
+// Function //
+
+const validateUser = function(action, usersID, shortUrl) {
+  if (!(users[usersID] && usersID === urlDatabase[shortUrl].userID)) {
+    res.status(401).send(`<h1>Only the creator of the Tiny Url can ${action} the url when logged in</h1>`);
+  }
 };
 
 // Routes //
@@ -87,9 +92,9 @@ app.get('/urls/new', (req, res) => {
 app.get("/urls/:id", (req, res) => {
   const shortUrl = req.params.id;
   const usersID = req.session.user_id;
-  checkUsersPermissions("view", usersID, users, shortUrl, urlDatabase, res);
+  validateUser("view", usersID, shortUrl);
 
-  const templateVars = { id: shortUrl, longURL: urlDatabase[shortUrl].longURL, user: users[usersID]};
+  const templateVars = { id: shortUrl, longURL: urlDatabase[shortUrl].longURL, user: users[usersID] };
   res.render("urls_show", templateVars);
 });
 
@@ -119,9 +124,9 @@ app.post('/register', (req, res) => {
   } else if (!email || !password) {
     res.status(400).send("Email and password are both required fields.");
   }
-  
+
   req.session.user_id = id;
-  users[id] = { id, email, hashedPassword};
+  users[id] = { id, email, hashedPassword };
   res.redirect('/urls');
 });
 
@@ -155,12 +160,12 @@ app.post('/logout', (req, res) => {
 app.post('/urls', (req, res) => {
   const currentUser = req.session.user_id;
   const shortUrl = generateSixRandomChars();
- 
+
   if (!users[currentUser]) {
     res.status(401).send("<h1>Please Login Or Register To Create Tiny Urls</h1>");
   }
 
-  urlDatabase[shortUrl] = {  longURL: req.body.longURL,  userID: currentUser  };
+  urlDatabase[shortUrl] = { longURL: req.body.longURL, userID: currentUser };
   res.redirect(`/urls/${shortUrl}`);
 });
 
@@ -168,8 +173,7 @@ app.post('/urls', (req, res) => {
 app.put('/urls/:id', (req, res) => {
   const shortUrl = req.params.id;
   const usersID = req.session.user_id;
-
-  checkUsersPermissions('edit', usersID, users, shortUrl, urlDatabase, res);
+  validateUser('edit', usersID, shortUrl);
 
   urlDatabase[shortUrl].longURL = req.body.longURL;
 
@@ -181,7 +185,7 @@ app.delete("/urls/:id", (req, res) => {
   const shortUrl = req.params.id;
   const usersID = req.session.user_id;
 
-  checkUsersPermissions('delete', usersID, users, shortUrl, urlDatabase, res);
+  validateUser('delete', usersID, shortUrl);
 
 
   delete urlDatabase[shortUrl];
@@ -191,5 +195,5 @@ app.delete("/urls/:id", (req, res) => {
 // SERVER //
 
 app.listen(PORT, () => {
-  console.log(`Example app listening on port ${PORT}`);
+  console.log(`Tiny App Server listening on port ${PORT}`);
 });
