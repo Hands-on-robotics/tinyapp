@@ -21,7 +21,7 @@ const users = {
   userRandomID: {
     id: "a1b2c3",
     email: "example@mail.com",
-    password: "123",
+    password: "123"
   }
 };
 
@@ -29,7 +29,7 @@ const urlDatabase = {
   // Example Tiny Url
   i3BoGr: {
     longURL: "https://www.google.ca",
-    userID: "a1b2c3",
+    userID: "a1b2c3"
   },
 };
 
