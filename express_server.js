@@ -36,7 +36,9 @@ const urlDatabase = {
 // Function //
 
 const validateUser = function(action, usersID, shortUrl, res) {
+
   if (!(users[usersID] && usersID === urlDatabase[shortUrl].userID)) {
+  
     res.status(401).send(`<h1>Only the creator of the Tiny Url can ${action} the url when logged in</h1>`);
   }
 };
