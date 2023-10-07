@@ -4,10 +4,17 @@ TinyApp is a full stack web application built with Node and Express that allows 
 
 ## Final Product
 
-!["Create Tiny Urls that take up less space"](./screenshots/createUrl.png)
-!["Edit your Tiny Urls resource location"](./screenshots/editUrl.png)
-!["View My Tiny Urls Main Page"](./screenshots/listUrls.png)
-!["The tiny urls will redirect you to their resource locations!"](./screenshots/urlsLocation.png)
+Create some Tiny Urls that take up less space.
+!["Create Tiny Urls that take up less space"](https://github.com/Hands-on-robotics/tinyapp/blob/main/docs/createUrl.png?raw=true)
+
+You can Edit the Tiny Urls resource location!
+!["Edit your Tiny Urls resource location"](https://github.com/Hands-on-robotics/tinyapp/blob/main/docs/editUrl.png?raw=true)
+
+See all the Tiny Urls you created!
+!["View My Tiny Urls Main Page"](https://github.com/Hands-on-robotics/tinyapp/blob/main/docs/listUrls.png?raw=true)
+
+The Tiny Urls will redirect you to their resource location.
+!["The tiny urls will redirect you to their resource locations!"](https://github.com/Hands-on-robotics/tinyapp/blob/main/docs/urlsLocation.png?raw=true)
 
 ## Dependencies
 
