@@ -1,14 +1,44 @@
 
 // helpers.js
 
-const foundUserByEmail = function(email, users) {
+const generateSixRandomChars = function() {
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  let randomString = '';
+
+  for (let i = 0; i < 6; i++) {
+    const randomIndex = chars.charAt(Math.floor(Math.random() * chars.length));
+    randomString += randomIndex;
+  }
+  
+  return randomString;
+};
+
+const findUserByEmail = function(email, users) {
   for (const id in users) {
     const user = users[id];
     if (user.email === email) {
       return user;
     }
   }
+
   return null;
 };
 
-module.exports = { foundUserByEmail };
+const urlsForUser = function(id, urlDatabase) {
+  let urls = {};
+  for (const tinyUrl in urlDatabase) {
+    if (urlDatabase[tinyUrl].userID === id) {
+      urls[tinyUrl] = urlDatabase[tinyUrl];
+    }
+  }
+
+  return urls;
+};
+
+const checkUsersPermissions = function(action, usersID, users, shortUrl, urlDatabase, res) {
+  if (!(users[usersID] && usersID === urlDatabase[shortUrl].userID)) {
+    res.status(401).send(`<h1>Only the creator of the Tiny Url can ${action} the url when Logged In</h1>`);
+  }
+};
+
+module.exports = { generateSixRandomChars, findUserByEmail, urlsForUser, checkUsersPermissions };

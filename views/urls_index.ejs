@@ -35,7 +35,7 @@
         <tbody>
             <% for (let tinyUrl in urls) { %>
               <tr>
-                <td><%= tinyUrl %></td>
+                <td><a href="<%= urls[tinyUrl].longURL %>" ><%= tinyUrl %></a></td>
                 <td><%= urls[tinyUrl].longURL %></td>
                 <td>
                   <form method="GET" action="/urls/<%= tinyUrl %>">
@@ -43,7 +43,7 @@
                   </form>
                 </td>
                 <td>
-                  <form method="POST" action="/urls/<%= tinyUrl %>/delete">
+                  <form method="POST" action="/urls/<%= tinyUrl %>?_method=DELETE">
                     <button type="submit">Delete</button>
                   </form>
                 </td>
