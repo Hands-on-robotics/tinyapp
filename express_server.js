@@ -20,7 +20,7 @@ const users = {
   // Example User
   userRandomID: {
     id: "a1b2c3",
-    email: "example@mailto.com",
+    email: "example@mail.com",
     password: "123",
   }
 };
@@ -39,7 +39,7 @@ const urlDatabase = {
 
 // Function //
 
-const validateUser = function(action, usersID, shortUrl) {
+const validateUser = function(action, usersID, shortUrl, res) {
   if (!(users[usersID] && usersID === urlDatabase[shortUrl].userID)) {
     res.status(401).send(`<h1>Only the creator of the Tiny Url can ${action} the url when logged in</h1>`);
   }
@@ -92,7 +92,7 @@ app.get('/urls/new', (req, res) => {
 app.get("/urls/:id", (req, res) => {
   const shortUrl = req.params.id;
   const usersID = req.session.user_id;
-  validateUser("view", usersID, shortUrl);
+  validateUser("view", usersID, shortUrl, res);
 
   const templateVars = { id: shortUrl, longURL: urlDatabase[shortUrl].longURL, user: users[usersID] };
   res.render("urls_show", templateVars);
@@ -173,7 +173,7 @@ app.post('/urls', (req, res) => {
 app.put('/urls/:id', (req, res) => {
   const shortUrl = req.params.id;
   const usersID = req.session.user_id;
-  validateUser('edit', usersID, shortUrl);
+  validateUser('edit', usersID, shortUrl, res);
 
   urlDatabase[shortUrl].longURL = req.body.longURL;
 
@@ -185,7 +185,7 @@ app.delete("/urls/:id", (req, res) => {
   const shortUrl = req.params.id;
   const usersID = req.session.user_id;
 
-  validateUser('delete', usersID, shortUrl);
+  validateUser('delete', usersID, shortUrl, res);
 
 
   delete urlDatabase[shortUrl];
